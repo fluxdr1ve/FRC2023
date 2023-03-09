@@ -9,18 +9,22 @@ import frc.robot.commands.AimAssist;
 import frc.robot.commands.ArcadeDrive;
 import frc.robot.commands.AutoTrackObject;
 import frc.robot.commands.CheckObject;
+import frc.robot.commands.ElevatorButtonCMD;
+import frc.robot.commands.PIDDrive;
 import frc.robot.subsystems.DriveTrainSubsystem;
+import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.Limelight;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-
+import edu.wpi.first.wpilibj.Joystick;
 public class RobotContainer {
   // The robot's subsystems and commands are defined here...
   private final DriveTrainSubsystem m_driveTrain = new DriveTrainSubsystem();
   private final Limelight m_light = new Limelight();
+  private final Elevator elevator = new Elevator();
   private final PIDController pid = new PIDController(0, 0, 0);
   // Replace with CommandPS4Controller or CommandJoystick if needed
   private final CommandXboxController m_driverController =
@@ -41,9 +45,13 @@ public class RobotContainer {
 
     m_driverController.rightBumper().whileTrue(new AutoTrackObject(m_driveTrain, m_light, 0));
     m_driverController.leftBumper().whileTrue(new AutoTrackObject(m_driveTrain, m_light, 1));
-    m_driverController.a().whileTrue(new AimAssist(m_driveTrain, m_light, 0, () -> m_driverController.getLeftY()));
-    m_driverController.b().whileTrue(new AimAssist(m_driveTrain, m_light, 1, () -> m_driverController.getLeftY()));
-    m_driverController.y().whileTrue(new CheckObject(m_light, 0));
+    // m_driverController.a().whileTrue(new AimAssist(m_driveTrain, m_light, 0, () -> m_driverController.getLeftY()));
+    // m_driverController.b().whileTrue(new AimAssist(m_driveTrain, m_light, 1, () -> m_driverController.getLeftY()));
+    // m_driverController.y().whileTrue(new CheckObject(m_light, 0));
+    m_driverController.x().whileTrue(new PIDDrive(m_driveTrain, 0));
+    m_driverController.y().whileTrue(new PIDDrive(m_driveTrain, 1.2));
+    m_driverController.b().whileTrue(new ElevatorButtonCMD(elevator, 0.5));
+
 
   }
 

@@ -50,4 +50,9 @@ public final class Constants {
     public static final int kConePipeline = 0;
     public static final int kCubePipeline = 0;
   }
+
+  public static class ElevatorConstants
+  {
+    public static final int kElevatorMotorPort = 0;
+  }
 }

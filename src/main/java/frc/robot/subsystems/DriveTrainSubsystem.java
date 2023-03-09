@@ -11,7 +11,6 @@ import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 import edu.wpi.first.wpilibj.motorcontrol.Spark;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj.ADXRS450_Gyro;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.CounterBase.EncodingType;
@@ -39,7 +38,8 @@ public class DriveTrainSubsystem extends SubsystemBase  {
               m_leftmotor, m_leftmotor1);
   // private static final int kEncoderAChannel = 0;   
   // private static final int kEconderBChannel = 1;
-  private Encoder encoder = new Encoder(0,1,true, EncodingType.k4X);
+  private final Encoder leftEncoder = new Encoder(0,1);
+  private final Encoder rightEncoder = new Encoder(2,3);  
   // private final double kDriveTick2Feet = 1.0/ 128 *6*Math.PI/12;
   // private Joystick joy1 = new Joystick(0);  
   SparkMaxPIDController right = m_rightmotor.getPIDController();
@@ -52,7 +52,7 @@ public class DriveTrainSubsystem extends SubsystemBase  {
   // double errorSum = 0;
   // double lastTimestamp  = 0;
   // double lastError = 0;
-  SendableChooser<String> m_chooser = new SendableChooser<>();
+  private static SendableChooser<String> m_chooser = new SendableChooser<>();
   
   // The robot's drive
   private final DifferentialDrive m_drive = new DifferentialDrive(m_leftMotors, m_rightMotors);
@@ -128,6 +128,11 @@ public class DriveTrainSubsystem extends SubsystemBase  {
         break;
     }
   }
+  public double getEncoderMeters()
+  {
+    return (leftEncoder.getDistance() + rightEncoder.getDistance())/2;
+  }
+
 
   
   
