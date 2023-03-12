@@ -5,30 +5,42 @@
 package frc.robot;
 
 import frc.robot.Constants.OperatorConstants;
-import frc.robot.commands.AimAssist;
-import frc.robot.commands.ArcadeDrive;
-import frc.robot.commands.AutoTrackObject;
-import frc.robot.commands.CheckObject;
-import frc.robot.commands.ElevatorButtonCMD;
-import frc.robot.commands.PIDDrive;
+import frc.robot.commands.ArcadeDriveCommand;
+import frc.robot.commands.ArmToggleCommand;
+import frc.robot.commands.ClawToggleCommand;
+// import frc.robot.commands.AimAssist;
+// import frc.robot.commands.ArcadeDriveCommand;
+// import frc.robot.commands.AutoTrackObject;
+// import frc.robot.commands.CheckObject;
+import frc.robot.commands.CurvatureDriveCommand;
+import frc.robot.commands.SimpleElevatorMovementCommand;
+import frc.robot.commands.autonomous.SimpleDriveDistance;
+import frc.robot.subsystems.ArmSubsystem;
+import frc.robot.subsystems.ClawSubsystem;
 import frc.robot.subsystems.DriveTrainSubsystem;
-import frc.robot.subsystems.Elevator;
+import frc.robot.subsystems.ElevatorPIDSubsystem;
+import frc.robot.subsystems.ElevatorSubsystem;
+import frc.robot.subsystems.IMUGyroSubsystem;
 import frc.robot.subsystems.Limelight;
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import edu.wpi.first.wpilibj.Joystick;
+
 public class RobotContainer {
   // The robot's subsystems and commands are defined here...
   private final DriveTrainSubsystem m_driveTrain = new DriveTrainSubsystem();
   private final Limelight m_light = new Limelight();
-  private final Elevator elevator = new Elevator();
-  private final PIDController pid = new PIDController(0, 0, 0);
-  // Replace with CommandPS4Controller or CommandJoystick if needed
+  private final IMUGyroSubsystem m_gyro = new IMUGyroSubsystem();
   private final CommandXboxController m_driverController =
       new CommandXboxController(OperatorConstants.kDriverControllerPort);
+  private final CommandXboxController m_driverController2 =
+      new CommandXboxController(OperatorConstants.kDriverControllerPort2);
+  private final ClawSubsystem m_claw = new ClawSubsystem();
+  private final ArmSubsystem m_arm = new ArmSubsystem();
+  //private final ElevatorSubsystem m_elevator = new ElevatorSubsystem();
+  private final ElevatorPIDSubsystem m_elevator = new ElevatorPIDSubsystem();
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -36,23 +48,27 @@ public class RobotContainer {
     configureBindings();
 
 
-    m_driveTrain.setDefaultCommand(new ArcadeDrive(m_driveTrain, () -> m_driverController.getLeftY(), () -> m_driverController.getRightX()));
+   
 
     
   }
 
   private void configureBindings() {
+    m_driveTrain.setDefaultCommand(new ArcadeDriveCommand(m_driveTrain, () -> m_driverController.getRightX(), () -> m_driverController.getLeftY()));
+    //m_driveTrain.setDefaultCommand(new CurvatureDriveCommand(m_driveTrain, () -> m_driverController.getLeftY(), () -> m_driverController.getRightX(), m_driverController.x()));
+    m_driverController2.a().onTrue(new ClawToggleCommand(m_claw));
+    m_driverController2.b().onTrue(new ArmToggleCommand(m_arm));
+    m_elevator.setDefaultCommand(Commands.run(
+      () ->
+          m_elevator.setGoal(
+              -m_driverController.getLeftY() * 100),
+      m_elevator));
+    m_driverController
+        .rightBumper()
+        .onTrue(Commands.runOnce(() -> m_driveTrain.setMaxOutput(0.3)))
+        .onFalse(Commands.runOnce(() -> m_driveTrain.setMaxOutput(0.8)));
 
-    m_driverController.rightBumper().whileTrue(new AutoTrackObject(m_driveTrain, m_light, 0));
-    m_driverController.leftBumper().whileTrue(new AutoTrackObject(m_driveTrain, m_light, 1));
-    // m_driverController.a().whileTrue(new AimAssist(m_driveTrain, m_light, 0, () -> m_driverController.getLeftY()));
-    // m_driverController.b().whileTrue(new AimAssist(m_driveTrain, m_light, 1, () -> m_driverController.getLeftY()));
-    // m_driverController.y().whileTrue(new CheckObject(m_light, 0));
-    m_driverController.x().whileTrue(new PIDDrive(m_driveTrain, 0));
-    m_driverController.y().whileTrue(new PIDDrive(m_driveTrain, 1.2));
-    m_driverController.b().whileTrue(new ElevatorButtonCMD(elevator, 0.5));
-
-
+    
   }
 
   /**
@@ -61,8 +77,9 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
-    // An example command will be run in autonomous   
+    // An example command will be run in autonomous
     //return Autos.exampleAuto(m_exampleSubsystem);
-    return new InstantCommand();
+    return new SimpleDriveDistance(m_driveTrain, 48);
+    
   }
 }

@@ -20,7 +20,7 @@ public class Limelight extends SubsystemBase{
 
     
     public boolean hasTarget() {
-        return m_limelight.getEntry("tv").getDouble(0) == 1.0;
+        return tv == 1.0;
     }
 
     /**
@@ -67,6 +67,5 @@ public class Limelight extends SubsystemBase{
         tx = m_limelight.getEntry("tx").getDouble(0);
         ty = m_limelight.getEntry("ty").getDouble(0);
         pipeline = m_limelight.getEntry("pipeline").getNumber(0).intValue();
-        System.out.println("tv: " + tv + "tx: " + tx + "ty: " + ty );
     }
 }

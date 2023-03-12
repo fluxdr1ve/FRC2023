@@ -4,25 +4,9 @@
 
 package frc.robot;
 
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import frc.robot.subsystems.DriveTrainSubsystem;
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import frc.robot.Constants;
-import frc.robot.Constants.DriveConstants;
-import com.revrobotics.CANSparkMax;
-import com.revrobotics.CANSparkMaxLowLevel.MotorType;
-
-import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
-import edu.wpi.first.wpilibj.motorcontrol.MotorController;
-import edu.wpi.first.wpilibj.Encoder;
-import edu.wpi.first.wpilibj.CounterBase.EncodingType;
-import edu.wpi.first.wpilibj.Joystick;
-
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -32,24 +16,13 @@ import edu.wpi.first.wpilibj.Joystick;
  */
 public class Robot extends TimedRobot {
   private Command m_autonomousCommand;
-  private final MotorControllerGroup m_rightMotors =
-  new MotorControllerGroup(
-      new CANSparkMax(DriveConstants.kRightMotor1Port,MotorType.kBrushless),
-      new CANSparkMax(DriveConstants.kRightMotor2Port,MotorType.kBrushless));
-  private final MotorControllerGroup m_leftMotors =
-          new MotorControllerGroup(
-              new CANSparkMax(DriveConstants.kLeftMotor1Port,MotorType.kBrushless),
-              new CANSparkMax(DriveConstants.kLeftMotor2Port,MotorType.kBrushless));
-  private RobotContainer m_robotContainer;
-  private Encoder encoder = new Encoder(0,1,true, EncodingType.k4X);
-  private Joystick joy1 = new Joystick(0);
 
-  private final double kDriveTick2Feet = 1.0/ 128 *6*Math.PI/12;
+  private RobotContainer m_robotContainer;
+
   /**
    * This function is run when the robot is first started up and should be used for any
    * initialization code.
    */
-
   @Override
   public void robotInit() {
     // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
@@ -70,7 +43,7 @@ public class Robot extends TimedRobot {
     // commands, running already-scheduled commands, removing finished or interrupted commands,
     // and running subsystem periodic() methods.  This must be called from the robot's periodic
     // block in order for anything in the Command-based framework to work.
-    SmartDashboard.putNumber("encoder value",encoder.get()* kDriveTick2Feet);
+    CommandScheduler.getInstance().run();
   }
 
   /** This function is called once each time the robot enters Disabled mode. */
@@ -83,11 +56,6 @@ public class Robot extends TimedRobot {
   /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
   @Override
   public void autonomousInit() {
-    // encoder.reset();
-    // lastError = 0;
-    // errorSum = 0;
-    // lastTimestamp = Timer.getFPGATimestamp();
-
     m_autonomousCommand = m_robotContainer.getAutonomousCommand();
 
     // schedule the autonomous command (example)
@@ -95,29 +63,10 @@ public class Robot extends TimedRobot {
       m_autonomousCommand.schedule();
     }
   }
-  // final double kP = 0.5;
-  // final double kI = 0.5;
-  // final double kD = 0.1;
-  // final double iLimit = 1;
 
-  // /** This function is called periodically during autonomous. */
-  // double setpoint = 0;
-  // double errorSum = 0;
-  // double lastTimestamp  = 0;
-  // double lastError = 0;
+  /** This function is called periodically during autonomous. */
   @Override
-  public void autonomousPeriodic() {
-   // get joystick command
-
-   
-   
-   //output to motors
-  //  m_leftMotors.set(outputSpeed);
-  //  m_rightMotors.set(-outputSpeed);
-
-  //  lastTimestamp = Timer.getFPGATimestamp();
-  //  lastError = error;
-  }
+  public void autonomousPeriodic() {}
 
   @Override
   public void teleopInit() {
@@ -132,9 +81,7 @@ public class Robot extends TimedRobot {
 
   /** This function is called periodically during operator control. */
   @Override
-  public void teleopPeriodic() {
-
-  }
+  public void teleopPeriodic() {}
 
   @Override
   public void testInit() {

@@ -4,95 +4,56 @@
 
 package frc.robot.subsystems;
 
-import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.wpilibj.drive.DifferentialDrive;
-import edu.wpi.first.wpilibj.interfaces.Gyro;
-import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
-import edu.wpi.first.wpilibj.motorcontrol.Spark;
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj.Encoder;
-import edu.wpi.first.wpilibj.Joystick;
-import edu.wpi.first.wpilibj.CounterBase.EncodingType;
-import frc.robot.Constants.DriveConstants;
-import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
-
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
-import com.revrobotics.SparkMaxPIDController;
-import com.revrobotics.CANSparkMax.ControlType;
+
+import edu.wpi.first.math.filter.SlewRateLimiter;
+import edu.wpi.first.wpilibj.drive.DifferentialDrive;
+import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants.DriveConstants;
+import com.revrobotics.RelativeEncoder;
+
+public class DriveTrainSubsystem extends SubsystemBase {
+  private final CANSparkMax left = new CANSparkMax(DriveConstants.kLeftMotor1Port, MotorType.kBrushless);
+  private final MotorControllerGroup m_leftMotors =
+      new MotorControllerGroup(
+          left,
+          new CANSparkMax(DriveConstants.kLeftMotor2Port, MotorType.kBrushless));
+          private final CANSparkMax right = new CANSparkMax(DriveConstants.kRightMotor1Port, MotorType.kBrushless);
+          private final MotorControllerGroup m_rightMotors =
+              new MotorControllerGroup(
+                 right ,
+                  new CANSparkMax(DriveConstants.kRightMotor2Port, MotorType.kBrushless));
+          private final RelativeEncoder leftEncoder = left.getEncoder();
+          private final RelativeEncoder rightEncoder = right.getEncoder();  
+
+  // The motors on the right side of the drive.
 
 
-public class DriveTrainSubsystem extends SubsystemBase  {
-  private final CANSparkMax m_rightmotor = new CANSparkMax(DriveConstants.kRightMotor1Port,MotorType.kBrushless);
-  private final CANSparkMax m_rightmotor1 = new CANSparkMax(DriveConstants.kRightMotor2Port,MotorType.kBrushless);
-  private final MotorControllerGroup m_rightMotors =
-  new MotorControllerGroup(
-      m_rightmotor,
-      m_rightmotor1);
-
-  private final CANSparkMax m_leftmotor =  new CANSparkMax(DriveConstants.kLeftMotor1Port,MotorType.kBrushless);
-  private final CANSparkMax m_leftmotor1 = new CANSparkMax(DriveConstants.kLeftMotor1Port,MotorType.kBrushless);
-  private final MotorControllerGroup m_leftMotors = 
-          new MotorControllerGroup(
-              m_leftmotor, m_leftmotor1);
-  // private static final int kEncoderAChannel = 0;   
-  // private static final int kEconderBChannel = 1;
-  private final Encoder leftEncoder = new Encoder(0,1);
-  private final Encoder rightEncoder = new Encoder(2,3);  
-  // private final double kDriveTick2Feet = 1.0/ 128 *6*Math.PI/12;
-  // private Joystick joy1 = new Joystick(0);  
-  SparkMaxPIDController right = m_rightmotor.getPIDController();
-  SparkMaxPIDController left = m_leftmotor.getPIDController();
-  // double kP = DriveConstants.kP;
-  // double kI = DriveConstants.kI;
-  // double kD = DriveConstants.kD;
-  // double iLimit = DriveConstants.iLimit; 
-  // double setpoint = 0;
-  // double errorSum = 0;
-  // double lastTimestamp  = 0;
-  // double lastError = 0;
-  private static SendableChooser<String> m_chooser = new SendableChooser<>();
+  private SlewRateLimiter filter1;
+  private SlewRateLimiter filter2;
   
   // The robot's drive
   private final DifferentialDrive m_drive = new DifferentialDrive(m_leftMotors, m_rightMotors);
 
   public DriveTrainSubsystem()
   {
-    m_chooser.setDefaultOption("Tank Drive", "Tank Drive");
-    m_chooser.addOption("Arcade Drive", "Arcade Drive");
-    m_chooser.addOption("Curvature Drive", "Curvature Drive");
-    // right.setP(kP);
-    // left.setP(kP);
-    // right.setI(kI);
-    // left.setI(kI);
-    // right.setD(kD);
-    // left.setD(kD);
-    //  left.setIZone(iLimit);
-    //  right.setIZone(iLimit);
-    //  left.setOutputRange(-1, 1);
+    SlewRateLimiter filter1 = new SlewRateLimiter(3.5);
+    SlewRateLimiter filter2 = new SlewRateLimiter(3);
+  }
 
-  }
-  public void tankDrive(double leftSpeed, double rightSpeed)
-  {
-    m_drive.tankDrive(leftSpeed, rightSpeed, true);
-  }
 
   public void arcadeDrive(double speed, double rot)
   {
-    m_drive.arcadeDrive(speed, rot, true);
+    m_drive.arcadeDrive(filter1.calculate(speed), filter2.calculate(rot));
   }
 
-  public void curvatureDrive(double speed, double rot)
+  public void curvatureDrive(double throttle, double rot, boolean turnInPlace)
   {
-    m_drive.curvatureDrive(speed, rot, false);
+    m_drive.curvatureDrive(filter1.calculate(throttle), filter2.calculate(rot), turnInPlace);
   }
-
-  // public void PIDDrive(double distance)
-  // {
-  //   left.setReference(distance, ControlType.kPosition);
-  //   right.setReference(distance, ControlType.kPosition);
-  // }
+  
   
   public void stop()
   {
@@ -110,29 +71,17 @@ public class DriveTrainSubsystem extends SubsystemBase  {
     return m_rightMotors.get();
   }
 
-  
 
 
-  public void setDrive(double lx, double ly, double ry)
+  public void setMaxOutput(double maxOutput)
   {
-    switch (m_chooser.getSelected())
-    {
-      case "Tank Drive": 
-        tankDrive(ly, ry);
-        break;
-      case "Arcade Drive": 
-        arcadeDrive(ly, lx);
-        break;
-      case "Curvature Drive": 
-        curvatureDrive(ly, lx);
-        break;
-    }
+    m_drive.setMaxOutput(maxOutput);
   }
+
   public double getEncoderMeters()
   {
-    return (leftEncoder.getDistance() + rightEncoder.getDistance())/2;
+    return (leftEncoder.getPosition()+ rightEncoder.getPosition())/2;
   }
-
 
   
   
@@ -141,14 +90,5 @@ public class DriveTrainSubsystem extends SubsystemBase  {
     // This method will be called once per scheduler run
   }
 
-  @Override
-  public void simulationPeriodic() {
-    // This method will be called once per scheduler run during simulation
-  }
-  public void autonomousPeriodic() {
 
-  }
-  public void autonomousInit(){
-     
-  }
 }
